@@ -1,0 +1,50 @@
+Version vieja:
+BABOT_/
+|---app/
+|    |---config/
+|    |       |---settings.xlsx (excel con las configuraciones, como usuarios, URLs o contraseñas)
+|    |
+|    |---Modulos/ (aca estan las carpetas con los diferentes bots)
+|    |       |---DesudasDescargas/  
+|    |       |          |---el bot hecho con robocorp
+|    |       |---funciones/  (esta carpeta tiene las funciones de la interfaz y si hay funciones del bot aparte)
+|    |       |          |---funciones_script.py
+|    |       |          |---logica_funcional.py
+|    |
+|    |---statics/ (estan los estaticos utilizados para la interfaz)
+|    |---Ejecutar.bat (ejecutable)
+|    |---EJECUTAR4AM.py (archivo para ejecutar el bot desde la terminal)
+|    |---interfaz_BABOT.py
+|    |---locators.json
+|    |---reporte_ejecucion.txt
+|    
+|---Inputs/
+|---Outputs/
+|---Logs/
+|---Ejecutar BABOT ( acceso directo del ejecutable)
+
+
+Version Nueva:
+BABOT/
+├── bots/               ← cada bot en su propia carpeta
+│   └── DeudaDescargas/
+├── config/
+│   └── settings.xlsx
+├── core/               ← toda la lógica (reemplaza Modulos/funciones/)
+│   ├── runner.py       ← ejecutar/detener scripts
+│   ├── excel_utils.py  ← leer/escribir settings
+│   └── robot_builder.py← lógica de crear .robot
+├── ui/                 ← toda la interfaz separada de la lógica
+│   ├── panels/         ← tiene las clases de cada panel
+│   │     ├──panel_main.py 
+│   │     ├──panel_config.py
+│   │     └──panel_bots.py
+│   ├── main_window.py
+│   ├── config_window.py
+│   └── components.py   ← botones, widgets reutilizables
+├── statics/
+├── data/               ← Inputs, Outputs, Logs juntos
+│   ├── inputs/
+│   ├── outputs/
+│   └── logs/
+└── main.py    
