@@ -9,7 +9,7 @@ Gestor de bots RPA de escritorio construido en Python. Permite ejecutar, configu
 </td>
 <td width="30%" align="center" style="border: none;">
 
-<img src="Statics/logo-day.png" alt="GABI Logo" width="180"/>
+<img src="Statics/logo.png" alt="GABI Logo" width="180"/>
 
 </td>
 </tr>
