@@ -1,9 +1,10 @@
+import os
 import customtkinter as ctk
 from ui.panels.panel_main   import PanelMain
 from ui.panels.panel_bots   import PanelBots
 from ui.panels.panel_config import PanelConfig
 
-# ─── Paleta de colores ─────────────────────────────────────────────────────────
+# ─── Paleta de colores ──
 # Definimos los colores acá para que todos los paneles puedan importarlos
 # desde un único lugar. Si querés cambiar un color, lo cambiás una sola vez.
 COLORS = {
@@ -13,6 +14,8 @@ COLORS = {
     "bg_card":       "#26262a",   # tarjetas / filas
     
     "border":        "#43454D",   # líneas divisorias
+    
+    "logo_fondo":    "#c4d6e0",
     
     "accent":        "#1a6fb5",   # azul principal (botones, activo)
     "accent_light":  "#9ed3f5",   # celeste para texto sobre azul
@@ -34,7 +37,7 @@ COLORS = {
 
 class MainWindow(ctk.CTk):
     """
-    Ventana raíz de BABOT. Contiene el layout base con el sidebar y el área de contenido.
+    Ventana raíz de GABI. Contiene el layout base con el sidebar y el área de contenido.
     """
 
     WIDTH  = 820
@@ -43,7 +46,7 @@ class MainWindow(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("BABOT")
+        self.title("GABI")
         self.geometry(f"{self.WIDTH}x{self.HEIGHT}")
         self.resizable(False, False)  # ventana fija
 
@@ -93,45 +96,40 @@ class MainWindow(ctk.CTk):
         self.sidebar.grid(row=0, column=0, sticky="nsew")
         self.sidebar.grid_rowconfigure(1, weight=1)  # la nav se expande
 
-        # ── Logo ───
+        # ── Logo ────
         logo_frame = ctk.CTkFrame(
             self.sidebar,
             fg_color="transparent",
             corner_radius=0,
         )
         logo_frame.grid(row=0, column=0, sticky="ew", padx=16, pady=(18, 12))
-
-        # Cuadrado de color con la letra "B"
-        logo_box = ctk.CTkLabel(
-            logo_frame,
-            text="B",
-            font=ctk.CTkFont(size=18, weight="bold"),
-            fg_color=COLORS["accent"],
-            text_color=COLORS["accent_light"],
-            corner_radius=8,
-            width=40,
-            height=40,
-        )
-        logo_box.pack(side="left")
-
-        # Textos "BABOT" y subtítulo
-        text_frame = ctk.CTkFrame(logo_frame, fg_color="transparent")
-        text_frame.pack(side="left", padx=(10, 0))
-
-        ctk.CTkLabel(
-            text_frame,
-            text="BABOT",
-            font=ctk.CTkFont(size=16, weight="bold"),
-            text_color=COLORS["text_primary"],
-        ).pack(anchor="w")
-
-        """ctk.CTkLabel(
-            text_frame,
-            text="RPA Manager",
-            font=ctk.CTkFont(size=12),
-            text_color=COLORS["text_dim"],
-        ).pack(anchor="w")"""
-
+ 
+        # Logo desde archivo de imagen
+        # Si no existe el archivo, cae al texto de fallback
+        try:
+            from PIL import Image
+            img_logo = Image.open(os.path.join("Statics", "logo-day.png"))
+            img_logo = img_logo.resize((200, 280), Image.Resampling.LANCZOS)
+            logo_ctk = ctk.CTkImage(light_image=img_logo, dark_image=img_logo, size=(195, 100))
+            ctk.CTkLabel(
+                logo_frame,
+                image=logo_ctk,
+                text="",
+                fg_color= COLORS["logo_fondo"],
+                corner_radius=14,
+                width=200,
+                height=110,
+            ).pack(side="left")
+        except Exception:
+            # Fallback: texto si no se encuentra la imagen
+            ctk.CTkLabel(
+                logo_frame,
+                text="GABI",
+                font=ctk.CTkFont(size=15, weight="bold"),
+                text_color=COLORS["text_primary"],
+            ).pack(side="left")
+ 
+ 
         # Línea divisora debajo del logo
         ctk.CTkFrame(
             self.sidebar,

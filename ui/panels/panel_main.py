@@ -5,7 +5,7 @@ from datetime import datetime
 
 class PanelMain(ctk.CTkFrame):
     """
-    Panel principal de BABOT.
+    Panel principal de GABI.
 
     Muestra:
     - Barra superior con el nombre del bot activo y su estado

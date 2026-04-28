@@ -25,7 +25,7 @@ BABOT_/
 
 
 Version Nueva:
-BABOT/
+GABI/
 ├── bots/               ← cada bot en su propia carpeta
 │   └── DeudaDescargas/
 ├── config/
