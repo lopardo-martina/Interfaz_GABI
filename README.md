@@ -64,12 +64,12 @@ El archivo `config/settings.xlsx` tiene dos hojas:
 
 **Sheet1 — configuración general**
 
-| Fila | CLAVE | VALOR |
-|------|-------|-------|
-| 2 | USUARIO_MAJOR | usuario de acceso al sistema Major |
-| 3 | PASSWORD_MAJOR | contraseña del sistema Major |
-| 6 | MI_EXCEL | nombre del archivo Excel a utilizar |
-| 7 | HOJA_EXCEL | nombre de la hoja del Excel |
+| Fila | CLAVE | VALOR | DETALLE |
+|------|-------|-------|-------|
+| 2 | USUARIO_MAJOR | PEPITO | usuario de acceso al sistema Major |
+| 3 | PASSWORD_MAJOR | PEPITO123 | contraseña del sistema Major |
+| 6 | MI_EXCEL | Excel.xlsx | nombre del archivo Excel a utilizar |
+| 7 | HOJA_EXCEL | Sheet1 | nombre de la hoja del Excel |
 
 **robots — lista de bots registrados**
 
