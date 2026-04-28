@@ -1,7 +1,21 @@
 # GABI — Gestion Automatizada Bots de Ingresos
 
+<table border="none">
+<tr>
+<td width="70%">
+
 Gestor de bots RPA de escritorio construido en Python. Permite ejecutar, configurar y monitorear bots de automatización que interactúan con el Sistema Major.
 
+</td>
+<td width="30%" align="right">
+
+<img src="Statics/logo-day.png" alt="GABI Logo" width="180"/>
+
+</td>
+</tr>
+</table>
+
+---
 ---
 
 ## Características
