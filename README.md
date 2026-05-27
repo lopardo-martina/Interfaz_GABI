@@ -40,6 +40,7 @@ GABI/
 ├── core/
 │   ├── runner.py                    # Ejecuta bots via subprocess, captura output
 │   └── excel_utils.py               # Leer/escribir settings.xlsx
+│   └── bot_base.py                  # Tiene las funciones bases que usan los bots en general
 │
 ├── ui/
 │   ├── main_window.py               # Ventana principal + sidebar + navegación
