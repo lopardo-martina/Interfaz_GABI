@@ -17,12 +17,12 @@ env/
 
 # ── Datos sensibles ───────────────────────────────────────────────────────────
 # El Excel tiene usuarios, contraseñas y URLs — nunca va al repo
-config/settings.xlsx
+Config/settings.json
 
 # ── Outputs y logs generados ─────────────────────────────────────────────────
-data/logs/
-data/outputs/
-data/inputs/
+data/Logs/
+data/Outputs/
+data/Inputs/
 
 # ── Robot Framework ───────────────────────────────────────────────────────────
 output.xml

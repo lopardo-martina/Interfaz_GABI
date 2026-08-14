@@ -2,19 +2,23 @@
 ui/panels/panel_bots.py
 
 Panel de gestión de bots. Permite:
-  - Ver todos los bots registrados en la hoja 'robots' del Excel
+  - Ver todos los bots registrados en settings.json
   - Activar / desactivar cada bot con un toggle
   - Agregar un bot nuevo (nombre + ruta con selector de archivo)
   - Eliminar un bot existente
 
-Los cambios se guardan en settings.xlsx en tiempo real
+Los cambios se guardan en settings.json en tiempo real
 (cada toggle y cada eliminación guarda automáticamente).
+
+Al agregar un bot, su bloque 'config' arranca vacío: las variables propias
+se agregan después a mano en el settings.json y el usuario edita sus valores
+desde el panel de Configuración.
 """
 
 import os
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
-from core.excel_utils import leer_bots, guardar_bots, agregar_bot, eliminar_bot
+from Config.settings import leer_bots, guardar_bots, agregar_bot, eliminar_bot
 
 
 class PanelBots(ctk.CTkFrame):
@@ -109,7 +113,7 @@ class PanelBots(ctk.CTkFrame):
         if not bots:
             ctk.CTkLabel(
                 self.scroll,
-                text="No hay bots registrados.\nUsá '＋ Agregar bot' para empezar.",
+                text="No hay bots registrados.\nUsá 'Agregar bot' para empezar.",
                 font=ctk.CTkFont(size=13),
                 text_color=self.colors["text_muted"],
                 justify="center",
@@ -217,8 +221,8 @@ class PanelBots(ctk.CTkFrame):
         else:
             messagebox.showerror(
                 "Error",
-                "No se pudo guardar en settings.xlsx.\n"
-                "Verificá que el archivo no esté abierto en Excel."
+                "No se pudo guardar en settings.json.\n"
+                "Verificá los permisos del archivo."
             )
 
     def _confirmar_eliminar(self, indice: int):

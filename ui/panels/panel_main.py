@@ -145,7 +145,7 @@ class PanelMain(ctk.CTkFrame):
 
         # Mensaje inicial en el log
         self._log("Sistema iniciado.", "dim")
-        self._log("Leyendo configuración desde settings.xlsx...", "info")
+        self._log("Leyendo configuración desde settings.json...", "info")
         self._log("Esperando orden de ejecución.", "dim")
 
     def _build_buttons(self):
