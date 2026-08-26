@@ -30,7 +30,7 @@ import os
 import json
 import copy
 
-from .config import SETTINGS_PATH, LOGS_DIR_DEFAULT
+from config.config import SETTINGS_PATH, LOGS_DIR_DEFAULT
 
 
 # ──────────────────────────────────────────────────────────────────────────

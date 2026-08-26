@@ -2,16 +2,16 @@
 ui/panels/panel_config.py
 
 Panel de configuración. Se divide en dos zonas:
- 
+
   1. CONFIGURACIÓN GLOBAL (fija, siempre visible):
      app / smtp / rutas — las credenciales, notificaciones y ruta de logs
      que usa GABI en general.
- 
+
   2. CONFIGURACIÓN POR BOT (dinámica):
      Cada bot tiene su propio bloque 'config' con sus variables.
      - Si hay un solo bot, se muestran sus variables directamente.
      - Si hay más de uno, aparecen pestañas (una por bot) con CTkTabview.
- 
+
 El panel solo EDITA valores de claves que ya existen en el settings.json.
 Para AGREGAR una variable nueva a un bot, se edita el settings.json a mano
 (la estructura la define el desarrollador, los valores los ajusta el usuario).
@@ -19,9 +19,15 @@ Para AGREGAR una variable nueva a un bot, se edita el settings.json a mano
 
 import customtkinter as ctk
 from tkinter import messagebox
-from Config.settings import *
+from config.settings import (
+    leer_config_global,
+    guardar_config_global,
+    leer_bots,
+    guardar_config_de_bot,
+)
 
 
+# Etiquetas legibles para las claves de la config global.
 # Si una clave no está acá, se muestra la clave tal cual.
 _LABELS_GLOBAL = {
     "nombre_bot":   "Nombre del sistema",
@@ -39,27 +45,29 @@ class PanelConfig(ctk.CTkFrame):
     def __init__(self, parent, colors: dict, main_window):
         super().__init__(parent, fg_color=colors["bg_panel"], corner_radius=0)
 
-        self.colors = colors
+        self.colors      = colors
         self.main_window = main_window
 
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # Lista de CTkEntry 
-        self._widget_global ={}
-        self._widgets_bot ={}
+        # Referencias a los entries/switches para poder leerlos al guardar.
+        # Global: { "app": {clave: widget}, "smtp": {...}, "rutas": {...} }
+        # Bots:   { "NombreBot": {clave: widget}, ... }
+        self._widgets_global = {}
+        self._widgets_bots = {}
 
         self._build_header()
         self._build_scroll()
         self._build_footer()
         self._cargar_todo()
 
-
-
+    # ──────────────────────────────────────────────────────────────────────
     # Construcción de la UI
+    # ──────────────────────────────────────────────────────────────────────
     def _build_header(self):
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=16, pady=6)
+        header.grid(row=0, column=0, sticky="ew", padx=16, pady=(14, 6))
 
         ctk.CTkLabel(
             header,
@@ -68,7 +76,6 @@ class PanelConfig(ctk.CTkFrame):
             text_color=self.colors["text_primary"],
         ).pack(side="left")
 
-        # Botón para recargar desde el Excel (útil si se editó manualmente)
         ctk.CTkButton(
             header,
             text="↺ Recargar",
@@ -82,11 +89,8 @@ class PanelConfig(ctk.CTkFrame):
             command=self._cargar_todo,
         ).pack(side="right")
 
-
     def _build_scroll(self):
-        """
-        Contenedor del scroll donde esta el contenido dinamico
-        """
+        """Contenedor scrolleable donde vive todo el contenido dinámico."""
         self.scroll = ctk.CTkScrollableFrame(
             self,
             fg_color="transparent",
@@ -112,77 +116,79 @@ class PanelConfig(ctk.CTkFrame):
             command=self._guardar_todo,
         ).grid(row=0, column=0, sticky="ew")
 
-
-
+    # ──────────────────────────────────────────────────────────────────────
     # Carga y renderizado
+    # ──────────────────────────────────────────────────────────────────────
     def _cargar_todo(self):
-        """Limpia y reconstruye el contenido del panel"""
+        """Limpia y reconstruye todo el contenido del panel."""
         for widget in self.scroll.winfo_children():
             widget.destroy()
         self._widgets_global = {}
-        self._widgets_bot = {}
+        self._widgets_bots = {}
 
         fila = 0
         fila = self._render_seccion_global(fila)
-        fila = self._render_seccion_bot(fila)
+        fila = self._render_seccion_bots(fila)
 
-
-    # Seccion global 
-    def _render_seccion_global(self, fila_inicial:int) -> int:
-        """
-        Renderiza las secciones app, smtp, rutas
-        """
+    # ── Sección global ─────────────────────────────────────────────────────
+    def _render_seccion_global(self, fila_inicial: int) -> int:
+        """Renderiza las secciones app / smtp / rutas de la config global."""
         config = leer_config_global()
         fila = fila_inicial
-       
+
         self._titulo_seccion("General", fila)
         fila += 1
-        
-        secciones =[
-            ("app", config.get("app",{})),
-            ("smtp", config.get("smtp",{})),
-            ("rutas", config.get("rutas",{})),
+
+        # Orden fijo de secciones para que se vea prolijo y predecible
+        secciones = [
+            ("app",   config.get("app", {})),
+            ("smtp",  config.get("smtp", {})),
+            ("rutas", config.get("rutas", {})),
         ]
-        
+
         for nombre_seccion, valores in secciones:
-            self._widget_global[nombre_seccion] = {}
+            self._widgets_global[nombre_seccion] = {}
             for clave, valor in valores.items():
                 widget = self._render_fila_valor(
-                    self.scroll, fila, clave, valor, _LABELS_GLOBAL.get(clave, clave)
+                    self.scroll, fila, clave, valor,
+                    _LABELS_GLOBAL.get(clave, clave),
                 )
-                self._widget_global[nombre_seccion][clave] = widget
+                self._widgets_global[nombre_seccion][clave] = widget
                 fila += 1
-        
+
         return fila
 
-    #Seccion por bot
-    def _render_seccion_bot(self, fila_inicial:int) -> int:
+    # ── Sección por bot ─────────────────────────────────────────────────────
+    def _render_seccion_bots(self, fila_inicial: int) -> int:
         """
-        Renderiza la config para cada bot.
-        si tiene 1 bot muestra sus variables, y si tiene mas de uno aparecen en pesatañas
+        Renderiza la config propia de cada bot.
+        - 0 bots  → nada.
+        - 1 bot   → sus variables directamente.
+        - +1 bots → pestañas (CTkTabview), una por bot.
         """
         bots = leer_bots()
-        #Solo se considera bots q tengan al menos una variable
+        # Solo consideramos bots que tengan al menos una variable configurable
         bots_con_config = [b for b in bots if b.get("config")]
 
         if not bots_con_config:
             return fila_inicial
-        
+
         fila = fila_inicial
-        
+
+        # Separador visual
         ctk.CTkFrame(
             self.scroll, height=1, fg_color=self.colors["border"],
         ).grid(row=fila, column=0, sticky="ew", pady=(16, 4))
         fila += 1
- 
+
         self._titulo_seccion("Variables por bot", fila)
         fila += 1
- 
+
         if len(bots_con_config) == 1:
-            # Un solo bot, sus variables directas, sin pestañas
+            # Un solo bot: sus variables directas, sin pestañas
             bot = bots_con_config[0]
-            self._widgets_bot[bot["nombre"]] = {}
- 
+            self._widgets_bots[bot["nombre"]] = {}
+
             ctk.CTkLabel(
                 self.scroll,
                 text=bot["nombre"],
@@ -191,13 +197,13 @@ class PanelConfig(ctk.CTkFrame):
                 anchor="w",
             ).grid(row=fila, column=0, sticky="w", padx=4, pady=(4, 2))
             fila += 1
- 
+
             for clave, valor in bot["config"].items():
                 widget = self._render_fila_valor(self.scroll, fila, clave, valor, clave)
-                self._widgets_bot[bot["nombre"]][clave] = widget
+                self._widgets_bots[bot["nombre"]][clave] = widget
                 fila += 1
         else:
-            # Varios bots, pestañas
+            # Varios bots: pestañas
             tabview = ctk.CTkTabview(
                 self.scroll,
                 fg_color=self.colors["bg_card"],
@@ -209,21 +215,20 @@ class PanelConfig(ctk.CTkFrame):
             )
             tabview.grid(row=fila, column=0, sticky="ew", pady=4)
             fila += 1
- 
+
             for bot in bots_con_config:
                 nombre = bot["nombre"]
                 tab = tabview.add(nombre)
                 tab.grid_columnconfigure(0, weight=1)
-                self._widgets_bot[nombre] = {}
- 
+                self._widgets_bots[nombre] = {}
+
                 for i, (clave, valor) in enumerate(bot["config"].items()):
                     widget = self._render_fila_valor(tab, i, clave, valor, clave)
-                    self._widgets_bot[nombre][clave] = widget
- 
+                    self._widgets_bots[nombre][clave] = widget
+
         return fila
-        
-        
-        
+
+    # ── Helpers de render ───────────────────────────────────────────────────
     def _titulo_seccion(self, texto: str, fila: int):
         ctk.CTkLabel(
             self.scroll,
@@ -232,19 +237,19 @@ class PanelConfig(ctk.CTkFrame):
             text_color=self.colors["accent_light"],
             anchor="w",
         ).grid(row=fila, column=0, sticky="w", padx=4, pady=(8, 4))
- 
+
     def _render_fila_valor(self, parent, fila: int, clave: str, valor, label: str):
         """
         Renderiza una fila 'etiqueta + control' y devuelve el control
         (CTkEntry o BooleanVar) para poder leerlo después.
- 
+
         - bool → switch
         - resto → entry de texto
         """
         contenedor = ctk.CTkFrame(parent, fg_color="transparent")
         contenedor.grid(row=fila, column=0, sticky="ew", pady=3)
         contenedor.grid_columnconfigure(1, weight=1)
- 
+
         ctk.CTkLabel(
             contenedor,
             text=label,
@@ -253,7 +258,7 @@ class PanelConfig(ctk.CTkFrame):
             anchor="w",
             width=150,
         ).grid(row=0, column=0, sticky="w", padx=(4, 8))
- 
+
         if isinstance(valor, bool):
             var = ctk.BooleanVar(value=valor)
             ctk.CTkSwitch(
@@ -266,7 +271,7 @@ class PanelConfig(ctk.CTkFrame):
                 progress_color=self.colors["accent"],
             ).grid(row=0, column=1, sticky="w")
             return var
- 
+
         entry = ctk.CTkEntry(
             contenedor,
             height=30,
@@ -279,7 +284,7 @@ class PanelConfig(ctk.CTkFrame):
         entry.insert(0, "" if valor is None else str(valor))
         entry.grid(row=0, column=1, sticky="ew")
         return entry
- 
+
     # ──────────────────────────────────────────────────────────────────────
     # Guardado
     # ──────────────────────────────────────────────────────────────────────
@@ -292,7 +297,7 @@ class PanelConfig(ctk.CTkFrame):
         """
         if isinstance(widget, ctk.BooleanVar):
             return widget.get()
- 
+
         texto = widget.get().strip()
         # Si el valor original era int, intentamos preservar el tipo
         if isinstance(valor_original, int) and not isinstance(valor_original, bool):
@@ -301,12 +306,12 @@ class PanelConfig(ctk.CTkFrame):
             except ValueError:
                 return texto
         return texto
- 
+
     def _guardar_todo(self):
         """Guarda tanto la config global como la de cada bot."""
         ok_global = self._guardar_global()
         ok_bots = self._guardar_bots()
- 
+
         if ok_global and ok_bots:
             self.main_window.set_status(
                 "● Configuración guardada", self.colors["log_ok"],
@@ -318,31 +323,31 @@ class PanelConfig(ctk.CTkFrame):
                 "No se pudo guardar en settings.json.\n"
                 "Verificá los permisos del archivo."
             )
- 
+
     def _guardar_global(self) -> bool:
         original = leer_config_global()
         nueva = {"app": {}, "smtp": {}, "rutas": {}}
- 
+
         for seccion, widgets in self._widgets_global.items():
             for clave, widget in widgets.items():
                 valor_original = original.get(seccion, {}).get(clave)
                 nueva[seccion][clave] = self._leer_widget(widget, valor_original)
- 
+
         return guardar_config_global(nueva)
- 
+
     def _guardar_bots(self) -> bool:
         """Guarda el bloque config de cada bot que se haya editado."""
         bots = {b["nombre"]: b for b in leer_bots()}
         ok = True
- 
-        for nombre, widgets in self._widgets_bot.items():
+
+        for nombre, widgets in self._widgets_bots.items():
             config_original = bots.get(nombre, {}).get("config", {})
             nueva_config = {}
             for clave, widget in widgets.items():
                 valor_original = config_original.get(clave)
                 nueva_config[clave] = self._leer_widget(widget, valor_original)
- 
+
             if not guardar_config_de_bot(nombre, nueva_config):
                 ok = False
- 
+
         return ok

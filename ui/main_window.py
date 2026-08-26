@@ -108,20 +108,18 @@ class MainWindow(ctk.CTk):
         # Si no existe el archivo, cae al texto de fallback
         try:
             from PIL import Image
-            img_logo = Image.open(os.path.join("Statics", "logo-day.png"))
+            img_logo = Image.open(os.path.join("Statics", "logo.png"))
             img_logo = img_logo.resize((200, 280), Image.Resampling.LANCZOS)
-            logo_ctk = ctk.CTkImage(light_image=img_logo, dark_image=img_logo, size=(195, 100))
+            logo_ctk = ctk.CTkImage(light_image=img_logo, dark_image=img_logo, size=(210, 170))
             ctk.CTkLabel(
                 logo_frame,
                 image=logo_ctk,
                 text="",
-                fg_color= COLORS["logo_fondo"],
-                corner_radius=14,
-                width=200,
-                height=110,
+                width=210,
+                height=170,
             ).pack(side="left")
         except Exception:
-            # Fallback: texto si no se encuentra la imagen
+            # Texto si no se encuentra la imagen
             ctk.CTkLabel(
                 logo_frame,
                 text="GABI",

@@ -21,7 +21,7 @@ import subprocess
 import os
 from datetime import datetime
 
-from Config.settings import leer_bots, ruta_logs, nombre_equipo
+from config.settings import leer_bots, ruta_logs, nombre_equipo
 from core.notificador import notif_mail_activa, enviar_mail, render_html
 
 

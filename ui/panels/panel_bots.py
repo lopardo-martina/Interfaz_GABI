@@ -18,7 +18,7 @@ desde el panel de Configuración.
 import os
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
-from Config.settings import leer_bots, guardar_bots, agregar_bot, eliminar_bot
+from config.settings import leer_bots, guardar_bots, agregar_bot, eliminar_bot
 
 
 class PanelBots(ctk.CTkFrame):

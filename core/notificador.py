@@ -16,8 +16,8 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
-from Config.config import SMTP_HOST, SMTP_PORT
-from Config.settings import smtp_config, nombre_bot_sistema
+from config.config import SMTP_HOST, SMTP_PORT
+from config.settings import smtp_config, nombre_bot_sistema
 
 
 def notif_mail_activa() -> bool:
@@ -150,10 +150,10 @@ def render_html(nombre: str, exito: bool, duracion: int, fecha: str,
       <td style="padding:4px 28px 20px 28px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
           {fila("Bot", nombre)}
-          {fila("Equipo", equipo)}
           {fila("Duración", f"{duracion}s")}
           {fila("Fecha_Inicio", fecha_inicio)}
           {fila("Fecha_Fin", fecha)}
+          {fila("Equipo", equipo)}
         </table>
       </td>
     </tr>
