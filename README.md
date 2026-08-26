@@ -70,7 +70,7 @@ GABI/
  
 GABI separa la configuración en dos niveles:
  
-- **Constantes de sistema** (`config/config.py`): valores que definen cómo funciona GABI y que solo cambia quien desarrolla (host y puerto SMTP, rutas internas). No se editan desde la interfaz.
+- **Constantes de sistema** (`config/config_sistema.py`): valores que definen cómo funciona GABI y que solo cambia quien desarrolla (host y puerto SMTP, rutas internas). No se editan desde la interfaz.
 - **Configuración editable** (`config/settings.json`): valores operativos que el usuario ajusta desde la app.
 El `settings.json` tiene esta forma:
  
