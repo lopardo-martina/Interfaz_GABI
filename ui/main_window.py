@@ -8,30 +8,36 @@ from ui.panels.panel_config import PanelConfig
 # Definimos los colores acá para que todos los paneles puedan importarlos
 # desde un único lugar. Si querés cambiar un color, lo cambiás una sola vez.
 COLORS = {
-    "bg_app":        "#1e1e20",   # fondo general
-    "bg_sidebar":    "#101011",   # sidebar más oscuro
-    "bg_panel":      "#1e1e20",   # fondo de los paneles
-    "bg_card":       "#26262a",   # tarjetas / filas
-    
-    "border":        "#43454D",   # líneas divisorias
-    
+    # ── Fondos: cuatro capas con contraste real entre sí para dar profundidad ──
+    "bg_app":        "#161618",   # fondo general (más oscuro que antes)
+    "bg_sidebar":    "#0d0d0e",   # sidebar, la capa más profunda
+    "bg_panel":      "#161618",   # fondo de los paneles
+    "bg_card":       "#212127",   # tarjetas / filas (se despega del fondo)
+    "bg_card_alt":   "#1b1b20",   # variante para filas alternas
+    "bg_inset":      "#0f0f11",   # zonas hundidas (log, inputs) — más negro que el fondo
+
+    "border":        "#33343b",   # líneas divisorias (más sutil)
+    "border_light":  "#3f4048",   # bordes de elementos destacados
+
     "logo_fondo":    "#c4d6e0",
-    
-    "accent":        "#1a6fb5",   # azul principal (botones, activo)
+
+    "accent":        "#2b7fc9",   # azul principal (un punto más vivo)
     "accent_light":  "#9ed3f5",   # celeste para texto sobre azul
-    "accent_dark":   "#1a3a5c",   # azul mas oscuro (hover, botón activo)
-    
-    "text_primary":  "#e0e0e0",   # texto principal
-    "text_muted":    "#888888",   # texto secundario
-    "text_dim":      "#555555",   # texto muy apagado
-    
+    "accent_dark":   "#1a3a5c",   # azul más oscuro (hover, botón activo)
+    "accent_hover":  "#2569a8",   # hover de botones azules
+
+    "text_primary":  "#eaeaec",   # texto principal (un poco más brillante)
+    "text_muted":    "#8b8b93",   # texto secundario
+    "text_dim":      "#5a5a62",   # texto muy apagado
+
     "log_info":      "#7ec8f7",   # líneas info en el log
     "log_ok":        "#62af7b",   # líneas ok/verde en el log
     "log_warn":      "#f5ba31",   # líneas advertencia
     "log_error":     "#f58e8e",   # líneas error
-    
+
     "danger":        "#6b3333",   # fondo botón detener
     "danger_text":   "#f16e6e",   # texto botón detener
+    "danger_hover":  "#4a2020",   # hover botón detener
 }
 
 
@@ -102,52 +108,45 @@ class MainWindow(ctk.CTk):
             fg_color="transparent",
             corner_radius=0,
         )
-        logo_frame.grid(row=0, column=0, sticky="ew", padx=16, pady=(18, 12))
- 
-        # Logo desde archivo de imagen
-        # Si no existe el archivo, cae al texto de fallback
+        logo_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(24, 20))
+
+        # Logo desde archivo de imagen; si no existe, cae al texto grande "GABI".
+        logo_puesto = False
         try:
             from PIL import Image
-            img_logo = Image.open(os.path.join("Statics", "logo.png"))
-            img_logo = img_logo.resize((200, 280), Image.Resampling.LANCZOS)
-            logo_ctk = ctk.CTkImage(light_image=img_logo, dark_image=img_logo, size=(210, 170))
-            ctk.CTkLabel(
-                logo_frame,
-                image=logo_ctk,
-                text="",
-                width=210,
-                height=170,
-            ).pack(side="left")
+            ruta_logo = os.path.join("Statics", "logo-day.png")
+            if os.path.exists(ruta_logo):
+                img_logo = Image.open(ruta_logo)
+                logo_ctk = ctk.CTkImage(light_image=img_logo, dark_image=img_logo, size=(150, 78))
+                ctk.CTkLabel(
+                    logo_frame,
+                    image=logo_ctk,
+                    text="",
+                ).pack(side="left")
+                logo_puesto = True
         except Exception:
-            # Texto si no se encuentra la imagen
+            logo_puesto = False
+
+        if not logo_puesto:
+            # Fallback: wordmark grande y bold, como ancla de marca
             ctk.CTkLabel(
                 logo_frame,
                 text="GABI",
-                font=ctk.CTkFont(size=15, weight="bold"),
+                font=ctk.CTkFont(size=30, weight="bold"),
                 text_color=COLORS["text_primary"],
             ).pack(side="left")
- 
- 
-        # Línea divisora debajo del logo
-        ctk.CTkFrame(
-            self.sidebar,
-            height=1,
-            fg_color=COLORS["border"],
-        ).grid(row=0, column=0, sticky="sew", pady=(0, 0))
-
-
 
         # ── Navegación ───
-        # Se guardan los botones en un dict para poder cambiar su estilo, cuando el panel activo cambia.
+        # Se guardan los botones en un dict para poder cambiar su estilo cuando el panel activo cambia.
         nav_frame = ctk.CTkFrame(self.sidebar, fg_color="transparent")
-        nav_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+        nav_frame.grid(row=1, column=0, sticky="nsew", padx=12, pady=4)
 
         self._nav_buttons = {}
 
         nav_items = [
-            ("main",   "≡  Principal"),
-            ("bots",   "≡  Bots"),
-            ("config", "⚙  Configuración"),
+            ("main",   "≡   Principal"),
+            ("bots",   "≡   Bots"),
+            ("config", "⚙   Configuración"),
         ]
 
         for panel_name, label in nav_items:
@@ -156,14 +155,14 @@ class MainWindow(ctk.CTk):
                 text=label,
                 font=ctk.CTkFont(size=14),
                 anchor="w",
-                height=38,
-                corner_radius=10,
+                height=42,
+                corner_radius=9,
                 fg_color="transparent",
                 text_color=COLORS["text_muted"],
-                hover_color="#26262a",
+                hover_color=COLORS["bg_card"],
                 command=lambda p=panel_name: self._show_panel(p),
             )
-            btn.pack(fill="x", pady=2)
+            btn.pack(fill="x", pady=3)
             self._nav_buttons[panel_name] = btn
 
         # ── Footer del sidebar: estado del sistema ──────
@@ -172,7 +171,7 @@ class MainWindow(ctk.CTk):
             fg_color="transparent",
             corner_radius=0,
         )
-        footer.grid(row=2, column=0, sticky="sew", padx=12, pady=(0, 12))
+        footer.grid(row=2, column=0, sticky="sew", padx=20, pady=(0, 18))
 
         # Línea divisora sobre el footer
         ctk.CTkFrame(
@@ -188,7 +187,7 @@ class MainWindow(ctk.CTk):
             font=ctk.CTkFont(size=12),
             text_color=COLORS["text_dim"],
         )
-        self.status_label.pack(anchor="w", pady=(12, 0))
+        self.status_label.pack(anchor="w", pady=(14, 0))
 
 
     """Área de contenido"""
@@ -238,12 +237,12 @@ class MainWindow(ctk.CTk):
 
         # Actualizar estilos de los botones de navegación
         for btn_name, btn in self._nav_buttons.items():
-            if btn_name == name:  #btn activo
+            if btn_name == name:  # btn activo: fondo azul lleno, texto claro
                 btn.configure(
-                    fg_color=COLORS["accent_dark"],
-                    text_color=COLORS["accent_light"],
+                    fg_color=COLORS["accent"],
+                    text_color="#ffffff",
                 )
-            else: #btn inactivo
+            else:  # btn inactivo
                 btn.configure(
                     fg_color="transparent",
                     text_color=COLORS["text_muted"],
@@ -260,6 +259,18 @@ class MainWindow(ctk.CTk):
             text=text,
             text_color=color or COLORS["text_dim"],
         )
+
+    def abrir_config_notificador(self):
+        """
+        Abre la ventana modal de configuración del notificador (mail).
+        La invoca el botón de campana presente en el header de los paneles.
+        """
+        from ui.config_window import ConfigNotificadorWindow
+        # Evitamos abrir dos veces si ya está abierta
+        if getattr(self, "_notif_win", None) is not None and self._notif_win.winfo_exists():
+            self._notif_win.focus()
+            return
+        self._notif_win = ConfigNotificadorWindow(self, COLORS)
 
     def center_window(self):
         """Centra la ventana en la pantalla antes de mostrarla."""

@@ -31,46 +31,61 @@ class PanelMain(ctk.CTkFrame):
     """Construcción de la UI"""
     def _build_script_bar(self):
         """
-        Barra superior que muestra qué bot está activo y su estado.
-        Se actualiza durante la ejecución.
+        Barra superior que muestra qué bot está activo y su estado,
+        con el botón de campana (config del notificador) a la derecha.
         """
+        from ui.components import boton_campana
+
+        contenedor = ctk.CTkFrame(self, fg_color="transparent")
+        contenedor.grid(row=0, column=0, sticky="ew", padx=16, pady=(18, 6))
+        contenedor.grid_columnconfigure(0, weight=1)
+
         bar = ctk.CTkFrame(
-            self,
-            fg_color=self.colors["bg_sidebar"],
-            corner_radius=10,
+            contenedor,
+            fg_color=self.colors["bg_app"],
         )
-        bar.grid(row=0, column=0, sticky="ew", padx=10, pady=(16, 5))
+        bar.grid(row=0, column=0, sticky="ew")
         bar.grid_columnconfigure(0, weight=1)
 
-        # Etiqueta "BOT ACTIVO"
+        # Fila superior: etiqueta "BOT ACTIVO" + chip de estado
+        """fila_top = ctk.CTkFrame(bar, fg_color="transparent")
+        fila_top.grid(row=0, column=0, sticky="ew", padx=16, pady=(12, 0))
+        fila_top.grid_columnconfigure(0, weight=1)"""
+
         ctk.CTkLabel(
             bar,
             text="BOT ACTIVO",
             font=ctk.CTkFont(size=12),
             text_color=self.colors["text_dim"],
-        ).grid(row=0, column=0, sticky="w", padx=14, pady=(6, 0))
+        ).grid(row=0, column=0, sticky="w")
+
+        self.status_chip = ctk.CTkLabel(
+            contenedor,
+            text="EN ESPERA",
+            font=ctk.CTkFont(size=10, weight="bold"),      
+            fg_color=self.colors["bg_card"],
+            border_color=self.colors["border"],
+            border_width=1,
+            text_color=self.colors["text_muted"],
+            corner_radius=14,
+            padx=10,
+            pady=2,
+        )
+        self.status_chip.grid(row=0, column=1, sticky="e")
 
         # Nombre del script — se actualiza durante la ejecución
         self.script_name_label = ctk.CTkLabel(
             bar,
             text="Esperando para ejecutar...",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=ctk.CTkFont(size=18, weight="bold"),
             text_color=self.colors["accent_light"],
         )
-        self.script_name_label.grid(row=1, column=0, sticky="w", padx=14, pady=(0, 6))
+        self.script_name_label.grid(row=1, column=0, sticky="w", pady=(0, 14))
 
-        # Botn de estado
-        self.status_chip = ctk.CTkLabel(
-            bar,
-            text="En espera",
-            font=ctk.CTkFont(size=10),
-            fg_color=self.colors["bg_app"],
-            text_color=self.colors["text_dim"],
-            corner_radius=999,
-            padx=6,
-            pady=4,
-        )
-        self.status_chip.grid(row=0, column=1, rowspan=2, padx=12, pady=10)
+        # Botón de campana a la derecha de toda la barra
+        boton_campana(
+            contenedor, self.colors, self.main_window.abrir_config_notificador
+        ).grid(row=0, column=2, padx=(10, 0))
 
     def _build_log_area(self):
         """
@@ -81,22 +96,24 @@ class PanelMain(ctk.CTkFrame):
         """
         log_frame = ctk.CTkFrame(
             self,
-            fg_color="#111113",   # más oscuro que el fondo para destacar
-            corner_radius=10,
+            fg_color=self.colors["bg_inset"],   # capa hundida, bien oscura
+            corner_radius=12,
+            border_width=1,
+            border_color=self.colors["border"],
         )
-        log_frame.grid(row=1, column=0, sticky="nsew", padx=10, pady=4)
+        log_frame.grid(row=1, column=0, sticky="nsew", padx=16, pady=4)
         log_frame.grid_rowconfigure(1, weight=1)
         log_frame.grid_columnconfigure(0, weight=1)
 
         # ── Encabezado del log ──
         header = ctk.CTkFrame(log_frame, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=12, pady=(10, 4))
+        header.grid(row=0, column=0, sticky="ew", padx=14, pady=(12, 6))
 
         ctk.CTkLabel(
             header,
-            text="LOG DE EJECUCIÓN",
-            font=ctk.CTkFont(size=12),
-            text_color=self.colors["text_dim"],
+            text="ACTIVIDAD EN VIVO",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color=self.colors["text_muted"],
         ).pack(side="left")
 
         # Botón Limpiar log
@@ -104,8 +121,8 @@ class PanelMain(ctk.CTkFrame):
             header,
             text="Limpiar",
             font=ctk.CTkFont(size=10),
-            height=22,
-            width=60,
+            height=24,
+            width=64,
             corner_radius=999,
             fg_color=self.colors["bg_card"],
             text_color=self.colors["text_muted"],
@@ -116,7 +133,7 @@ class PanelMain(ctk.CTkFrame):
         # ── Texto del log ──
         self.log_text = tk.Text(
             log_frame,
-            bg="#111113",
+            bg=self.colors["bg_inset"],
             fg=self.colors["text_muted"],
             font=("Consolas", 10),
             wrap="word",
@@ -128,11 +145,11 @@ class PanelMain(ctk.CTkFrame):
             padx=12,
             pady=6,
         )
-        self.log_text.grid(row=1, column=0, sticky="nsew", padx=0, pady=(0, 10))
+        self.log_text.grid(row=1, column=0, sticky="nsew", padx=(2, 0), pady=(0, 10))
 
         # Scrollbar vertical
         scrollbar = ctk.CTkScrollbar(log_frame, command=self.log_text.yview)
-        scrollbar.grid(row=1, column=1, sticky="ns", pady=(0, 8))
+        scrollbar.grid(row=1, column=1, sticky="ns", pady=(0, 8), padx=(0, 2))
         self.log_text.configure(yscrollcommand=scrollbar.set)
 
         # ── Tags de color por tipo de mensaje ───
@@ -152,18 +169,18 @@ class PanelMain(ctk.CTkFrame):
         """Botones Iniciar y Detener en la parte inferior."""
 
         btn_frame = ctk.CTkFrame(self, fg_color="transparent")
-        btn_frame.grid(row=2, column=0, sticky="ew", padx=16, pady=(6, 14))
+        btn_frame.grid(row=2, column=0, sticky="ew", padx=16, pady=(10, 16))
         btn_frame.grid_columnconfigure((0, 1), weight=1)
 
         # ── Botón Iniciar ────
         self.btn_iniciar = ctk.CTkButton(
             btn_frame,
-            text="▶  Iniciar",
+            text="▶   INICIAR",
             font=ctk.CTkFont(size=13, weight="bold"),
-            height=40,
-            corner_radius=12,
+            height=44,
+            corner_radius=10,
             fg_color=self.colors["accent"],
-            hover_color=self.colors["accent_dark"],
+            hover_color=self.colors["accent_hover"],
             command=self._on_iniciar,
         )
         self.btn_iniciar.grid(row=0, column=0, sticky="ew", padx=(0, 6))
@@ -171,13 +188,13 @@ class PanelMain(ctk.CTkFrame):
         # ── Botón Detener ───
         self.btn_detener = ctk.CTkButton(
             btn_frame,
-            text="■  Detener",
+            text="■   DETENER",
             font=ctk.CTkFont(size=13, weight="bold"),
-            height=40,
-            corner_radius=12,
+            height=44,
+            corner_radius=10,
             fg_color=self.colors["danger"],
             text_color=self.colors["danger_text"],
-            hover_color="#4a2020",
+            hover_color=self.colors["danger_hover"],
             state="disabled",        # deshabilitado hasta que inicie
             command=self._on_detener,
         )
@@ -273,7 +290,7 @@ class PanelMain(ctk.CTkFrame):
         """Actualiza todos los elementos visuales según si está ejecutando o no."""
         if running:
             self.status_chip.configure(
-                text="Ejecutando",
+                text="EJECUTANDO",
                 fg_color=self.colors["accent_dark"],
                 text_color=self.colors["accent_light"],
             )
@@ -282,8 +299,8 @@ class PanelMain(ctk.CTkFrame):
             self.btn_iniciar.configure(state="normal")
             self.btn_detener.configure(state="disabled")
             self.status_chip.configure(
-                text="En espera",
-                fg_color=self.colors["bg_app"],
+                text="EN ESPERA",
+                fg_color=self.colors["bg_inset"],
                 text_color=self.colors["text_dim"],
             )
             self.main_window.set_status("● En espera", self.colors["text_dim"])

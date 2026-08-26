@@ -41,23 +41,37 @@ class PanelBots(ctk.CTkFrame):
 
     # Construcción de la UI
     def _build_header(self):
+        from ui.components import boton_campana
+
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=16, pady=(14, 6))
+        header.grid(row=0, column=0, sticky="ew", padx=16, pady=(18, 8))
+        header.grid_columnconfigure(0, weight=1)
+
+        # Bloque título + contador (apilados a la izquierda)
+        titulo_box = ctk.CTkFrame(header, fg_color="transparent")
+        titulo_box.grid(row=0, column=0, sticky="w")
 
         ctk.CTkLabel(
-            header,
-            text="Bots registrados",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            titulo_box,
+            text="BOTS REGISTRADOS",
+            font=ctk.CTkFont(size=18, weight="bold"),
             text_color=self.colors["text_primary"],
-        ).pack(side="left")
+            anchor="w",
+        ).pack(anchor="w")
 
         self.contador_label = ctk.CTkLabel(
-            header,
+            titulo_box,
             text="",
             font=ctk.CTkFont(size=11),
             text_color=self.colors["text_muted"],
+            anchor="w",
         )
-        self.contador_label.pack(side="right")
+        self.contador_label.pack(anchor="w")
+
+        # Campana a la derecha
+        boton_campana(
+            header, self.colors, self.main_window.abrir_config_notificador
+        ).grid(row=0, column=1, sticky="e")
 
     def _build_lista(self):
         self.scroll = ctk.CTkScrollableFrame(
@@ -76,26 +90,27 @@ class PanelBots(ctk.CTkFrame):
 
         ctk.CTkButton(
             footer,
-            text="Agregar bot",
-            font=ctk.CTkFont(size=13),
-            height=38,
-            corner_radius=8,
-            fg_color=self.colors["accent"],
-            hover_color="#1560a0",
+            text="AGREGAR BOT",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            height=44,
+            corner_radius=10,
+            fg_color=self.colors["bg_card"],
+            text_color=self.colors["text_primary"],
+            hover_color=self.colors["border"],
+            border_width=1,
+            border_color=self.colors["border"],
             command=self._abrir_dialogo_agregar,
         ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
 
         ctk.CTkButton(
             footer,
-            text="Guardar cambios",
-            font=ctk.CTkFont(size=13),
-            height=38,
-            corner_radius=8,
-            fg_color=self.colors["bg_card"],
-            text_color=self.colors["text_primary"],
-            hover_color="#333338",
-            border_width=1,
-            border_color=self.colors["border"],
+            text="GUARDAR CAMBIOS",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            height=44,
+            corner_radius=10,
+            fg_color=self.colors["accent"],
+            text_color="#ffffff",
+            hover_color=self.colors["accent_hover"],
             command=self._guardar_cambios,
         ).grid(row=0, column=1, sticky="ew", padx=(6, 0))
 
@@ -121,49 +136,30 @@ class PanelBots(ctk.CTkFrame):
             self._actualizar_contador(bots)
             return
 
+        # Contenedor único con borde que envuelve todas las filas (estilo mockup)
+        self.contenedor_bots = ctk.CTkFrame(
+            self.scroll,
+            fg_color=self.colors["bg_card"],
+            corner_radius=12,
+            border_width=1,
+            border_color=self.colors["border"],
+        )
+        self.contenedor_bots.grid(row=0, column=0, sticky="ew", pady=(2, 4))
+        self.contenedor_bots.grid_columnconfigure(0, weight=1)
+
         for i, bot in enumerate(bots):
-            self._render_fila_bot(i, bot)
+            self._render_fila_bot(i, bot, es_ultima=(i == len(bots) - 1))
 
         self._actualizar_contador(bots)
 
-    def _render_fila_bot(self, indice: int, bot: dict):
+    def _render_fila_bot(self, indice: int, bot: dict, es_ultima: bool = False):
         """
-        Renderiza una fila individual para un bot.
+        Renderiza una fila de bot dentro del contenedor compartido.
+        Las filas se separan con una línea divisoria (salvo la última).
         """
-        fila = ctk.CTkFrame(
-            self.scroll,
-            fg_color=self.colors["bg_card"],
-            corner_radius=8,
-        )
-        fila.grid(row=indice, column=0, sticky="ew", pady=4)
+        fila = ctk.CTkFrame(self.contenedor_bots, fg_color="transparent")
+        fila.grid(row=indice * 2, column=0, sticky="ew", padx=6, pady=2)
         fila.grid_columnconfigure(1, weight=1)
-
-        # Ícono
-        ctk.CTkLabel(
-            fila,
-            text="⚙",
-            font=ctk.CTkFont(size=16),
-            text_color=self.colors["accent_light"],
-            width=36,
-        ).grid(row=0, column=0, rowspan=2, padx=(12, 4), pady=12)
-
-        # Nombre
-        ctk.CTkLabel(
-            fila,
-            text=bot["nombre"] or "(sin nombre)",
-            font=ctk.CTkFont(size=13, weight="bold"),
-            text_color=self.colors["text_primary"],
-            anchor="w",
-        ).grid(row=0, column=1, sticky="w", padx=4, pady=(10, 0))
-
-        # Ruta truncada
-        ctk.CTkLabel(
-            fila,
-            text=self._truncar_ruta(bot["ruta"]),
-            font=ctk.CTkFont(size=10),
-            text_color=self.colors["text_dim"],
-            anchor="w",
-        ).grid(row=1, column=1, sticky="w", padx=4, pady=(0, 10))
 
         # Toggle
         var = ctk.BooleanVar(value=bot["activo"])
@@ -175,24 +171,53 @@ class PanelBots(ctk.CTkFrame):
             variable=var,
             width=44,
             button_color=self.colors["accent"],
-            button_hover_color="#1560a0",
+            button_hover_color=self.colors["accent_hover"],
             progress_color=self.colors["accent"],
             command=self._actualizar_contador_live,
-        ).grid(row=0, column=2, rowspan=2, padx=10)
+        ).grid(row=0, column=0, rowspan=2, padx=10)
 
-        # Botón eliminar
+
+        # Nombre y ruta del bot
+        col_nombre = ctk.CTkFrame(fila, fg_color="transparent")
+        col_nombre.grid(row=0, column=1, sticky="ew", padx=4, pady=(15, 0))
+        col_nombre.grid_columnconfigure(0, weight=1)
+
+        ctk.CTkLabel(
+            col_nombre,
+            text=bot["nombre"] or "(sin nombre)",
+            font=ctk.CTkFont(size=16),
+            text_color=self.colors["text_primary"],
+            anchor="w",
+        ).grid(row=0, column=0, sticky="w")
+
+        # Ruta del bot
+        ctk.CTkLabel(
+            col_nombre,
+            text=self._truncar_ruta(bot["ruta"]),
+            font=ctk.CTkFont(size=11),
+            text_color=self.colors["text_dim"],
+            anchor="w",
+        ).grid(row=1, column=0, sticky="w")
+
+        # Botón eliminar (ícono de basurero)
         ctk.CTkButton(
             fila,
-            text="✕",
-            font=ctk.CTkFont(size=12),
-            width=30,
-            height=30,
-            corner_radius=6,
-            fg_color=self.colors["danger"],
-            text_color=self.colors["danger_text"],
-            hover_color="#4a2020",
+            text="🗑️",
+            font=ctk.CTkFont(size=15),
+            width=5,
+            height=34,
+            corner_radius=10,
+            fg_color="transparent",
+            text_color=self.colors["text_muted"],
+            hover_color=self.colors["danger"],
             command=lambda i=indice: self._confirmar_eliminar(i),
-        ).grid(row=0, column=3, rowspan=2, padx=(0, 12))
+        ).grid(row=0, column=2, padx=(0,1))
+
+        # Línea divisoria entre filas (no en la última)
+        if not es_ultima:
+            ctk.CTkFrame(
+                self.contenedor_bots, height=1, fg_color=self.colors["border"], border_width=1,
+            ).grid(row=indice * 2 + 1, column=0, sticky="ew", padx=12)
 
     # ──────────────────────────────────────────────────────────────────────────
     # Acciones

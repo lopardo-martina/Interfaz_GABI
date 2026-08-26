@@ -1,13 +1,13 @@
 """
 ui/panels/panel_config.py
 
-Panel de configuración. Se divide en dos:
+Panel de configuración. Se divide en dos zonas:
 
   1. CONFIGURACIÓN GLOBAL (fija, siempre visible):
      app / smtp / rutas — las credenciales, notificaciones y ruta de logs
      que usa GABI en general.
 
-  2. CONFIGURACIÓN POR BOT:
+  2. CONFIGURACIÓN POR BOT (dinámica):
      Cada bot tiene su propio bloque 'config' con sus variables.
      - Si hay un solo bot, se muestran sus variables directamente.
      - Si hay más de uno, aparecen pestañas (una por bot) con CTkTabview.
@@ -66,28 +66,39 @@ class PanelConfig(ctk.CTkFrame):
     # Construcción de la UI
     # ──────────────────────────────────────────────────────────────────────
     def _build_header(self):
+        from ui.components import boton_campana
+
         header = ctk.CTkFrame(self, fg_color="transparent")
-        header.grid(row=0, column=0, sticky="ew", padx=16, pady=(14, 6))
+        header.grid(row=0, column=0, sticky="ew", padx=16, pady=(18, 8))
+        header.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
             header,
-            text="Configuración",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            text="CONFIGURACIÓN",
+            font=ctk.CTkFont(size=18, weight="bold"),
             text_color=self.colors["text_primary"],
-        ).pack(side="left")
+        ).grid(row=0, column=0, sticky="w")
+
+        # Recargar + campana, juntos a la derecha
+        acciones = ctk.CTkFrame(header, fg_color="transparent")
+        acciones.grid(row=0, column=1, sticky="e")
 
         ctk.CTkButton(
-            header,
+            acciones,
             text="↺ Recargar",
             font=ctk.CTkFont(size=11),
-            height=28,
-            width=90,
+            height=32,
+            width=96,
             corner_radius=999,
             fg_color=self.colors["bg_card"],
             text_color=self.colors["text_muted"],
             hover_color=self.colors["border"],
             command=self._cargar_todo,
-        ).pack(side="right")
+        ).pack(side="left", padx=(0, 8))
+
+        boton_campana(
+            acciones, self.colors, self.main_window.abrir_config_notificador
+        ).pack(side="left")
 
     def _build_scroll(self):
         """Contenedor scrolleable donde vive todo el contenido dinámico."""
@@ -107,12 +118,13 @@ class PanelConfig(ctk.CTkFrame):
 
         ctk.CTkButton(
             footer,
-            text="Guardar cambios",
-            font=ctk.CTkFont(size=14),
-            height=38,
-            corner_radius=12,
+            text="GUARDAR CAMBIOS",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            height=44,
+            corner_radius=10,
             fg_color=self.colors["accent"],
-            hover_color="#1560a0",
+            text_color="#ffffff",
+            hover_color=self.colors["accent_hover"],
             command=self._guardar_todo,
         ).grid(row=0, column=0, sticky="ew")
 
@@ -132,42 +144,40 @@ class PanelConfig(ctk.CTkFrame):
 
     # ── Sección global ─────────────────────────────────────────────────────
     def _render_seccion_global(self, fila_inicial: int) -> int:
-        """Renderiza las secciones app / smtp / rutas de la config global."""
+        """Config global (app / rutas) en una tarjeta con borde, estilo mockup."""
         config = leer_config_global()
         fila = fila_inicial
 
-        self._titulo_seccion("General", fila)
+        # Juntamos app + rutas en una sola tarjeta "GENERAL"
+        items = []
+        for seccion in ("app", "rutas"):
+            for clave, valor in config.get(seccion, {}).items():
+                items.append((seccion, clave, valor))
+
+        self._widgets_global = {"app": {}, "rutas": {}}
+
+        tarjeta = self._tarjeta_seccion(fila, "GENERAL")
         fila += 1
 
-        # Orden fijo de secciones para que se vea prolijo y predecible
-        secciones = [
-            ("app",   config.get("app", {})),
-            ("smtp",  config.get("smtp", {})),
-            ("rutas", config.get("rutas", {})),
-        ]
-
-        for nombre_seccion, valores in secciones:
-            self._widgets_global[nombre_seccion] = {}
-            for clave, valor in valores.items():
-                widget = self._render_fila_valor(
-                    self.scroll, fila, clave, valor,
-                    _LABELS_GLOBAL.get(clave, clave),
-                )
-                self._widgets_global[nombre_seccion][clave] = widget
-                fila += 1
+        for i, (seccion, clave, valor) in enumerate(items):
+            widget = self._render_fila_valor(
+                tarjeta, i, clave, valor,
+                _LABELS_GLOBAL.get(clave, clave),
+                es_ultima=(i == len(items) - 1),
+            )
+            self._widgets_global[seccion][clave] = widget
 
         return fila
 
     # ── Sección por bot ─────────────────────────────────────────────────────
     def _render_seccion_bots(self, fila_inicial: int) -> int:
         """
-        Renderiza la config propia de cada bot.
-        - 0 bots  → nada.
-        - 1 bot   → sus variables directamente.
-        - +1 bots → pestañas (CTkTabview), una por bot.
+        Config propia de cada bot.
+        - 0 bots con config → nada.
+        - 1 bot  → una tarjeta con su nombre.
+        - +1 bots → pestañas (CTkTabview), una por bot, dentro de una tarjeta.
         """
         bots = leer_bots()
-        # Solo consideramos bots que tengan al menos una variable configurable
         bots_con_config = [b for b in bots if b.get("config")]
 
         if not bots_con_config:
@@ -175,45 +185,35 @@ class PanelConfig(ctk.CTkFrame):
 
         fila = fila_inicial
 
-        # Separador visual
-        ctk.CTkFrame(
-            self.scroll, height=1, fg_color=self.colors["border"],
-        ).grid(row=fila, column=0, sticky="ew", pady=(16, 4))
-        fila += 1
-
-        self._titulo_seccion("Variables por bot", fila)
-        fila += 1
-
         if len(bots_con_config) == 1:
-            # Un solo bot: sus variables directas, sin pestañas
             bot = bots_con_config[0]
             self._widgets_bots[bot["nombre"]] = {}
 
-            ctk.CTkLabel(
-                self.scroll,
-                text=bot["nombre"],
-                font=ctk.CTkFont(size=13, weight="bold"),
-                text_color=self.colors["accent_light"],
-                anchor="w",
-            ).grid(row=fila, column=0, sticky="w", padx=4, pady=(4, 2))
+            tarjeta = self._tarjeta_seccion(fila, bot["nombre"].upper())
             fila += 1
 
-            for clave, valor in bot["config"].items():
-                widget = self._render_fila_valor(self.scroll, fila, clave, valor, clave)
+            items = list(bot["config"].items())
+            for i, (clave, valor) in enumerate(items):
+                widget = self._render_fila_valor(
+                    tarjeta, i, clave, valor, clave,
+                    es_ultima=(i == len(items) - 1),
+                )
                 self._widgets_bots[bot["nombre"]][clave] = widget
-                fila += 1
         else:
-            # Varios bots: pestañas
+            # Varios bots: pestañas dentro de una tarjeta
             tabview = ctk.CTkTabview(
                 self.scroll,
                 fg_color=self.colors["bg_card"],
-                segmented_button_fg_color=self.colors["bg_sidebar"],
+                border_width=1,
+                border_color=self.colors["border"],
+                corner_radius=12,
+                segmented_button_fg_color=self.colors["bg_inset"],
                 segmented_button_selected_color=self.colors["accent"],
-                segmented_button_selected_hover_color="#1560a0",
-                segmented_button_unselected_color=self.colors["bg_sidebar"],
+                segmented_button_selected_hover_color=self.colors["accent_hover"],
+                segmented_button_unselected_color=self.colors["bg_inset"],
                 text_color=self.colors["text_primary"],
             )
-            tabview.grid(row=fila, column=0, sticky="ew", pady=4)
+            tabview.grid(row=fila, column=0, sticky="ew", pady=(10, 4))
             fila += 1
 
             for bot in bots_con_config:
@@ -222,68 +222,106 @@ class PanelConfig(ctk.CTkFrame):
                 tab.grid_columnconfigure(0, weight=1)
                 self._widgets_bots[nombre] = {}
 
-                for i, (clave, valor) in enumerate(bot["config"].items()):
-                    widget = self._render_fila_valor(tab, i, clave, valor, clave)
+                items = list(bot["config"].items())
+                for i, (clave, valor) in enumerate(items):
+                    widget = self._render_fila_valor(
+                        tab, i, clave, valor, clave,
+                        es_ultima=(i == len(items) - 1),
+                    )
                     self._widgets_bots[nombre][clave] = widget
 
         return fila
 
     # ── Helpers de render ───────────────────────────────────────────────────
-    def _titulo_seccion(self, texto: str, fila: int):
-        ctk.CTkLabel(
+    def _tarjeta_seccion(self, fila: int, titulo: str):
+        """
+        Crea una tarjeta con borde y un título arriba, y devuelve el frame
+        interno donde se agregan las filas de valores.
+        """
+        wrapper = ctk.CTkFrame(
             self.scroll,
-            text=texto.upper(),
+            fg_color=self.colors["bg_card"],
+            corner_radius=12,
+            border_width=1,
+            border_color=self.colors["border"],
+        )
+        wrapper.grid(row=fila, column=0, sticky="ew", pady=(10, 4))
+        wrapper.grid_columnconfigure(0, weight=1)
+
+        # Título de la tarjeta
+        ctk.CTkLabel(
+            wrapper,
+            text=titulo,
             font=ctk.CTkFont(size=12, weight="bold"),
             text_color=self.colors["accent_light"],
             anchor="w",
-        ).grid(row=fila, column=0, sticky="w", padx=4, pady=(8, 4))
+        ).grid(row=0, column=0, sticky="w", padx=16, pady=(12, 4))
 
-    def _render_fila_valor(self, parent, fila: int, clave: str, valor, label: str):
+        # Frame interno para las filas
+        interno = ctk.CTkFrame(wrapper, fg_color="transparent")
+        interno.grid(row=1, column=0, sticky="ew", padx=8, pady=(0, 8))
+        interno.grid_columnconfigure(0, weight=1)
+        return interno
+
+    def _render_fila_valor(self, parent, fila: int, clave: str, valor, label: str,
+                           es_ultima: bool = False):
         """
-        Renderiza una fila 'etiqueta + control' y devuelve el control
-        (CTkEntry o BooleanVar) para poder leerlo después.
+        Fila estilo mockup: etiqueta a la izquierda, valor editable a la
+        derecha (alineado a la derecha, sin recuadro en reposo), y una
+        línea divisoria debajo (salvo la última).
 
-        - bool → switch
-        - resto → entry de texto
+        Devuelve el control (CTkEntry o BooleanVar) para leerlo al guardar.
         """
-        contenedor = ctk.CTkFrame(parent, fg_color="transparent")
-        contenedor.grid(row=fila, column=0, sticky="ew", pady=3)
-        contenedor.grid_columnconfigure(1, weight=1)
+        fila_frame = ctk.CTkFrame(parent, fg_color="transparent")
+        fila_frame.grid(row=fila * 2, column=0, sticky="ew", pady=2)
+        fila_frame.grid_columnconfigure(1, weight=1)
 
+        # Etiqueta a la izquierda
         ctk.CTkLabel(
-            contenedor,
+            fila_frame,
             text=label,
             font=ctk.CTkFont(size=12),
             text_color=self.colors["text_muted"],
-            anchor="w",
             width=150,
-        ).grid(row=0, column=0, sticky="w", padx=(4, 8))
+            anchor="w",
+        ).grid(row=0, column=0, sticky="w", padx=(8, 8), pady=8)
 
         if isinstance(valor, bool):
             var = ctk.BooleanVar(value=valor)
             ctk.CTkSwitch(
-                contenedor,
+                fila_frame,
                 text="",
                 variable=var,
                 width=44,
                 button_color=self.colors["accent"],
-                button_hover_color="#1560a0",
+                button_hover_color=self.colors["accent_hover"],
                 progress_color=self.colors["accent"],
-            ).grid(row=0, column=1, sticky="w")
-            return var
+            ).grid(row=0, column=1, sticky="e", padx=(0, 8))
+            control = var
+        else:
+            # Entry 
+            entry = ctk.CTkEntry(
+                fila_frame,
+                height=30,
+                corner_radius=6,
+                fg_color=self.colors["bg_app"],
+                border_width=0,
+                text_color=self.colors["text_primary"],
+                font=ctk.CTkFont(size=12),
+                justify="right",
+            )
+            entry.insert(0, "" if valor is None else str(valor))
+            entry.grid(row=0, column=1, sticky="ew", padx=(0, 8))
+            
+            control = entry
 
-        entry = ctk.CTkEntry(
-            contenedor,
-            height=30,
-            corner_radius=6,
-            fg_color=self.colors["bg_app"],
-            border_color=self.colors["border"],
-            text_color=self.colors["text_primary"],
-            font=ctk.CTkFont(size=12),
-        )
-        entry.insert(0, "" if valor is None else str(valor))
-        entry.grid(row=0, column=1, sticky="ew")
-        return entry
+        # Línea divisoria (no en la última fila)
+        if not es_ultima:
+            ctk.CTkFrame(
+                parent, height=1, fg_color=self.colors["border"],
+            ).grid(row=fila * 2 + 1, column=0, sticky="ew", padx=8)
+
+        return control
 
     # ──────────────────────────────────────────────────────────────────────
     # Guardado
@@ -326,8 +364,16 @@ class PanelConfig(ctk.CTkFrame):
 
     def _guardar_global(self) -> bool:
         original = leer_config_global()
-        nueva = {"app": {}, "smtp": {}, "rutas": {}}
 
+        # Partimos de la config original para NO pisar secciones que este panel
+        # ya no edita (SMTP se maneja en la ventana del notificador).
+        nueva = {
+            "app":   dict(original.get("app", {})),
+            "smtp":  dict(original.get("smtp", {})),
+            "rutas": dict(original.get("rutas", {})),
+        }
+
+        # Sobrescribimos solo lo que efectivamente se muestra en el panel
         for seccion, widgets in self._widgets_global.items():
             for clave, widget in widgets.items():
                 valor_original = original.get(seccion, {}).get(clave)
