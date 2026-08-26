@@ -18,7 +18,7 @@ desde el panel de Configuración.
 import os
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
-from config.settings import leer_bots, guardar_bots, agregar_bot, eliminar_bot
+from config.almacenamiento import leer_bots, guardar_bots, agregar_bot, eliminar_bot
 
 
 class PanelBots(ctk.CTkFrame):
@@ -129,11 +129,6 @@ class PanelBots(ctk.CTkFrame):
     def _render_fila_bot(self, indice: int, bot: dict):
         """
         Renderiza una fila individual para un bot.
-
-        Layout:
-        ┌──────────────────────────────────────────────┬────────┬──────────┐
-        │  [⚙]  Nombre          ruta/...              │ toggle │    ✕     │
-        └──────────────────────────────────────────────┴────────┴──────────┘
         """
         fila = ctk.CTkFrame(
             self.scroll,

@@ -1,13 +1,13 @@
 """
 ui/panels/panel_config.py
 
-Panel de configuración. Se divide en dos zonas:
+Panel de configuración. Se divide en dos:
 
   1. CONFIGURACIÓN GLOBAL (fija, siempre visible):
      app / smtp / rutas — las credenciales, notificaciones y ruta de logs
      que usa GABI en general.
 
-  2. CONFIGURACIÓN POR BOT (dinámica):
+  2. CONFIGURACIÓN POR BOT:
      Cada bot tiene su propio bloque 'config' con sus variables.
      - Si hay un solo bot, se muestran sus variables directamente.
      - Si hay más de uno, aparecen pestañas (una por bot) con CTkTabview.
@@ -19,7 +19,7 @@ Para AGREGAR una variable nueva a un bot, se edita el settings.json a mano
 
 import customtkinter as ctk
 from tkinter import messagebox
-from config.settings import (
+from config.almacenamiento import (
     leer_config_global,
     guardar_config_global,
     leer_bots,

@@ -1,9 +1,7 @@
 """
-core/settings.py
+config/almacenamiento.py
 
 Toda la interacción con config/settings.json pasa por acá.
-Reemplaza al viejo core/excel_utils.py: los paneles y el runner importan
-estas funciones y nunca tocan el JSON directamente.
 
 Estructura del settings.json:
 {
@@ -21,7 +19,7 @@ Estructura del settings.json:
 }
 
 Separación de responsabilidades:
-  - Constantes de sistema (host/puerto SMTP, rutas)  → core/config.py
+  - Constantes de sistema (host/puerto SMTP, rutas)  → config/config_sistema.py
   - Datos editables por el usuario                   → este JSON
   - Variables propias de cada bot                    → bloque "config" de cada bot
 """
@@ -30,7 +28,7 @@ import os
 import json
 import copy
 
-from config.config import SETTINGS_PATH, LOGS_DIR_DEFAULT
+from config.config_sistema import SETTINGS_PATH, LOGS_DIR_DEFAULT
 
 
 # ──────────────────────────────────────────────────────────────────────────

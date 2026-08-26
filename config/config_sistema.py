@@ -1,5 +1,5 @@
 """
-core/config.py
+core/config_sistema.py
 
 Constantes de sistema de GABI.
 
@@ -9,11 +9,7 @@ los cambia el desarrollador y hace un commit.
 
 La configuración editable por el usuario (credenciales, destinatarios,
 ruta de logs, variables de cada bot) vive en config/settings.json y se maneja
-desde core/settings.py.
-
-Regla mental para decidir dónde va una variable:
-    ¿La cambiaría un USUARIO para operar?      → settings.json
-    ¿La cambiaría un PROGRAMADOR para desarrollar? → acá
+desde config/almacenamiento.py.
 """
 
 import os
@@ -36,9 +32,9 @@ LOGS_DIR_DEFAULT = os.path.join("data", "logs")
 # ──────────────────────────────────────────────────────────────────────────
 # SMTP — parámetros de sistema
 # ──────────────────────────────────────────────────────────────────────────
-# El host y el puerto son fijos del proveedor de correo (Office 365 acá).
+# El host y el puerto son fijos del proveedor de correo (gmail acá).
 # Las credenciales y destinatarios NO van acá: son del usuario y viven en el
 # JSON para no hardcodear datos sensibles en el código versionado.
 
-SMTP_HOST = "smtp.office365.com"
+SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587

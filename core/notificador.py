@@ -4,8 +4,8 @@ core/notificador.py
 Envía notificaciones por mail al terminar la ejecución de un bot.
 
 Separación de config:
-  - Host y puerto SMTP → core/config.py (constantes de sistema)
-  - Credenciales y destinatarios → settings.json vía core/settings.py:
+  - Host y puerto SMTP → config/config_sistema.py (constantes de sistema)
+  - Credenciales y destinatarios → settings.json por config/almacenamiento.py:
         smtp.user         → mail remitente
         smtp.pass         → contraseña / app password
         smtp.mail_destino → destinatarios separados por coma
@@ -16,8 +16,8 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
-from config.config import SMTP_HOST, SMTP_PORT
-from config.settings import smtp_config, nombre_bot_sistema
+from config.config_sistema import SMTP_HOST, SMTP_PORT
+from config.almacenamiento import smtp_config, nombre_bot_sistema
 
 
 def notif_mail_activa() -> bool:

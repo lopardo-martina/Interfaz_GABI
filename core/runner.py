@@ -1,13 +1,13 @@
 """
 core/runner.py
 
-Responsable de ejecutar los scripts (.robot / .py) registrados
-en settings.json, uno por uno, en un hilo separado del hilo de la UI.
+Responsable de ejecutar los scripts registrados en settings.json, 
+uno por uno, en un hilo separado del hilo de la UI.
 
 Su flujo:
-  1. Lee los bots activos desde core/settings.py
+  1. Lee los bots activos desde config/almacenamiento.py
   2. Por cada bot, lanza un subprocess (python o según extensión)
-  3. Lee stdout y stderr línea a línea y los envía al log via callback
+  3. Lee stdout y stderr línea a línea y los envía al log por callback
   4. Al terminar todos (o al ser detenido), llama a done_callback
 
 Callbacks recibidos desde PanelMain:
@@ -21,7 +21,7 @@ import subprocess
 import os
 from datetime import datetime
 
-from config.settings import leer_bots, ruta_logs, nombre_equipo
+from config.almacenamiento import leer_bots, ruta_logs, nombre_equipo
 from core.notificador import notif_mail_activa, enviar_mail, render_html
 
 
