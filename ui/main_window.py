@@ -3,6 +3,7 @@ import customtkinter as ctk
 from ui.panels.panel_main   import PanelMain
 from ui.panels.panel_bots   import PanelBots
 from ui.panels.panel_config import PanelConfig
+from config.almacenamiento import leer_config_global
 
 # ─── Paleta de colores ──
 # Definimos los colores acá para que todos los paneles puedan importarlos
@@ -71,7 +72,12 @@ class MainWindow(ctk.CTk):
 
         # Se muestra el panel principal al arrancar
         self._show_panel("main")
+        self.actualizar_estado_notificador()
+        
 
+    """self._notif_win = ConfigNotificadorWindow(
+        self, COLORS, self.actualizar_estado_notificador
+    )"""
 
 
 
@@ -266,11 +272,16 @@ class MainWindow(ctk.CTk):
         La invoca el botón de campana presente en el header de los paneles.
         """
         from ui.config_window import ConfigNotificadorWindow
-        # Evitamos abrir dos veces si ya está abierta
+
         if getattr(self, "_notif_win", None) is not None and self._notif_win.winfo_exists():
             self._notif_win.focus()
             return
-        self._notif_win = ConfigNotificadorWindow(self, COLORS)
+
+        self._notif_win = ConfigNotificadorWindow(
+            self,
+            COLORS,
+            self.actualizar_estado_notificador
+    )
 
     def center_window(self):
         """Centra la ventana en la pantalla antes de mostrarla."""
@@ -280,3 +291,26 @@ class MainWindow(ctk.CTk):
         x = 20
         y = ((screen_h - self.HEIGHT) // 2) + 20
         self.geometry(f"{self.WIDTH}x{self.HEIGHT}+{x}+{y}")
+        
+        
+    """notificador"""
+    def actualizar_estado_notificador(self):
+        """
+        Actualiza visualmente el botón de campana según
+        el estado de notif_mail guardado en settings.json.
+        """
+        config = leer_config_global()
+        notif_activo = bool(
+            config.get("smtp", {}).get("notif_mail", False)
+        )
+
+        boton = self._panels["main"].boton_campana
+
+        if notif_activo:
+            boton.configure(
+                fg_color=COLORS["accent"]
+            )
+        else:
+            boton.configure(
+                fg_color=COLORS["bg_card"]
+            )

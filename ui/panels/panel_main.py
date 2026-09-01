@@ -64,8 +64,8 @@ class PanelMain(ctk.CTkFrame):
             text="EN ESPERA",
             font=ctk.CTkFont(size=10, weight="bold"),      
             fg_color=self.colors["bg_card"],
-            border_color=self.colors["border"],
-            border_width=1,
+            #border_color=self.colors["border"],
+            #border_width=1,
             text_color=self.colors["text_muted"],
             corner_radius=14,
             padx=10,
@@ -83,9 +83,10 @@ class PanelMain(ctk.CTkFrame):
         self.script_name_label.grid(row=1, column=0, sticky="w", pady=(0, 14))
 
         # Botón de campana a la derecha de toda la barra
-        boton_campana(
+        self.boton_campana = boton_campana(
             contenedor, self.colors, self.main_window.abrir_config_notificador
-        ).grid(row=0, column=2, padx=(10, 0))
+        )
+        self.boton_campana.grid(row=0, column=2, padx=(10, 0))
 
     def _build_log_area(self):
         """
@@ -281,8 +282,8 @@ class PanelMain(ctk.CTkFrame):
         """
         self.after(0, lambda: self._set_running_state(False))
         self.after(0, lambda: self._log("Ejecución finalizada.", "ok"))
- 
- 
+    
+   
 
 
     """Estado visual"""

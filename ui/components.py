@@ -10,9 +10,10 @@ import customtkinter as ctk
 
 def boton_campana(parent, colors: dict, command):
     """
-    Botón de campana (🔔) para abrir la configuración del notificador.
+    Botón de campana para abrir la configuración del notificador.
     Se ubica en el header de los paneles, alineado a la derecha.
     """
+    
     return ctk.CTkButton(
         parent,
         text="🔔",
@@ -21,7 +22,6 @@ def boton_campana(parent, colors: dict, command):
         corner_radius=10,
         font=ctk.CTkFont(size=16),
         fg_color=colors["bg_card"],
-        hover_color=colors["border"],
         text_color=colors["text_primary"],
         border_width=1,
         border_color=colors["border"],

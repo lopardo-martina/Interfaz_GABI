@@ -21,13 +21,14 @@ from config.almacenamiento import leer_config_global, guardar_config_global
 
 class ConfigNotificadorWindow(ctk.CTkToplevel):
 
-    def __init__(self, parent, colors: dict):
+    def __init__(self, parent, colors: dict, on_change):
         super().__init__(parent)
 
         self.colors = colors
+        self.on_change = on_change
 
         self.title("Configuración del notificador")
-        self.geometry("460x440")
+        self.geometry("440x460")
         self.resizable(False, False)
         self.configure(fg_color=colors["bg_app"])
         self.transient(parent)
@@ -37,6 +38,7 @@ class ConfigNotificadorWindow(ctk.CTkToplevel):
         self.after(10, self._centrar_sobre_padre, parent)
 
         self._entries = {}
+        self._notif_var = ctk.BooleanVar(value=False) 
         self._build()
         self._cargar()
 
@@ -85,7 +87,6 @@ class ConfigNotificadorWindow(ctk.CTkToplevel):
             anchor="w",
         ).grid(row=0, column=0, sticky="w")
 
-        self._notif_var = ctk.BooleanVar(value=False)
         ctk.CTkSwitch(
             fila_toggle,
             text="",
@@ -157,6 +158,7 @@ class ConfigNotificadorWindow(ctk.CTkToplevel):
         config["smtp"]["notif_mail"] = self._notif_var.get()
 
         if guardar_config_global(config):
+            self.on_change()
             self.destroy()
         else:
             messagebox.showerror(
