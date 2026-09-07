@@ -1,10 +1,3 @@
-"""
-ui/components.py
-
-Pequeños componentes reutilizables por los paneles, para no repetir código
-y mantener un estilo visual consistente.
-"""
-
 import customtkinter as ctk
 
 

@@ -1,7 +1,7 @@
 """
 core/runner.py
 
-Responsable de ejecutar los scripts registrados en settings.json, 
+ejecuta los scripts registrados en settings.json, 
 uno por uno, en un hilo separado del hilo de la UI.
 
 Su flujo:
@@ -10,10 +10,6 @@ Su flujo:
   3. Lee stdout y stderr línea a línea y los envía al log por callback
   4. Al terminar todos (o al ser detenido), llama a done_callback
 
-Callbacks recibidos desde PanelMain:
-  - log_callback(mensaje, tipo)   → escribe en el área de log
-  - done_callback()               → avisa que terminó la ejecución
-  - name_callback(nombre)         → actualiza el nombre del bot activo en la UI
 """
 
 import threading
@@ -312,8 +308,8 @@ class Runner:
             if not notif_mail_activa():
                 return
 
-            estado = "OK" if exito else "ERROR"
-            asunto = f"{nombre} finalizó con {estado}"
+            estado = "Correctamente" if exito else "con ERROR"
+            asunto = f"{nombre} - Ejecución finalizada {estado}."
             fecha = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
             # fecha_inicio llega como datetime desde _run
@@ -338,7 +334,7 @@ class Runner:
             # HTML
             cuerpo_html = render_html(nombre, exito, duracion, fecha, fecha_inicio_str, equipo, error)
 
-            ok, detalle = enviar_mail(asunto, cuerpo, cuerpo_html)
+            ok, detalle = enviar_mail(asunto, cuerpo, cuerpo_html, exito)
             self._log_ui(detalle, "ok" if ok else "warn")
 
         except Exception as e:

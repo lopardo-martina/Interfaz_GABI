@@ -2,14 +2,6 @@
 core/notificador.py
 
 Envía notificaciones por mail al terminar la ejecución de un bot.
-
-Separación de config:
-  - Host y puerto SMTP → config/config_sistema.py (constantes de sistema)
-  - Credenciales y destinatarios → settings.json por config/almacenamiento.py:
-        smtp.user         → mail remitente
-        smtp.pass         → contraseña / app password
-        smtp.mail_destino → destinatarios separados por coma
-        smtp.notif_mail   → true / false (interruptor general)
 """
 
 import smtplib
@@ -17,7 +9,7 @@ import ssl
 from email.message import EmailMessage
 
 from config.config_sistema import SMTP_HOST, SMTP_PORT
-from config.almacenamiento import smtp_config, nombre_bot_sistema
+from config.almacenamiento import smtp_config, nombre_bot_sistema, nombre_equipo
 
 
 def notif_mail_activa() -> bool:
@@ -25,14 +17,14 @@ def notif_mail_activa() -> bool:
     return bool(smtp_config().get("notif_mail", False))
 
 
-def enviar_mail(asunto: str, cuerpo: str, cuerpo_html: str = None) -> tuple[bool, str]:
+def enviar_mail(asunto: str, cuerpo: str, cuerpo_html: str = None, exito: bool = True) -> tuple[bool, str]:
     """
     Envía el mail. Devuelve (exito, detalle).
     Nunca lanza excepción: los errores vuelven en el detalle.
     """
     c = smtp_config()
     user = str(c.get("user", "")).strip()
-    pwd  = str(c.get("pass", "")).replace(" ", "").replace("\xa0", "")
+    pwd = str(c.get("pass", "")).replace(" ", "").replace("\xa0", "")
     destinos = [d.strip() for d in str(c.get("mail_destino", "")).split(",") if d.strip()]
 
     if not user or not pwd:
@@ -42,9 +34,12 @@ def enviar_mail(asunto: str, cuerpo: str, cuerpo_html: str = None) -> tuple[bool
 
     msg = EmailMessage()
     msg["Subject"] = asunto.replace("\xa0", " ")
-    msg["From"] = user
+    msg["From"] = f"GABI - {nombre_equipo()}<{user}>"
     msg["To"] = ", ".join(destinos)
-    msg.set_content(cuerpo)
+    msg.set_content(
+      f"{nombre_bot_sistema()} - Ejecución finalizada "
+      f"{'correctamente' if exito else 'con errores'}.\n\n"
+      "Abrí el correo para ver el detalle de la ejecución (=.")
     if cuerpo_html:
         msg.add_alternative(cuerpo_html, subtype="html")
 
@@ -80,18 +75,27 @@ def render_html(nombre: str, exito: bool, duracion: int, fecha: str,
 
     if exito:
         color_barra = "#62af7b"
+        color_encabezado = "#62af7a9b"
         color_badge = "#e8f5ec"
         color_texto = "#2d6b45"
         estado = "COMPLETADO"
         icono = "&#10003;"
     else:
         color_barra = "#d9534f"
+        color_encabezado = "#d9544f8b"
         color_badge = "#fdecea"
         color_texto = "#a12622"
         estado = "CON ERRORES"
         icono = "&#33;"
 
     bot_nombre = nombre_bot_sistema()
+    
+    preheader = (
+      f"{nombre_bot_sistema()} - Ejecución finalizada "
+      f"{'correctamente' if exito else 'con errores'}.\n\n"
+      "  :)  "
+      "Abrí el correo para ver el detalle de la ejecución."
+    )
 
     bloque_error = ""
     if error:
@@ -125,6 +129,27 @@ def render_html(nombre: str, exito: bool, duracion: int, fecha: str,
     return f"""<!DOCTYPE html>
 <html>
 <body style="margin:0; padding:24px 12px; background:#f4f6f8;">
+  <div style="display:none; max-height:0; overflow: hidden;opacity:0; color:transparent; font-size:1px; line-height:1px">
+    {preheader}
+    &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+    &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+  </div>
   <table role="presentation" cellpadding="0" cellspacing="0" border="0"
          style="max-width:560px; margin:0 auto; background:#ffffff;
                 border-radius:10px; overflow:hidden;
@@ -134,7 +159,7 @@ def render_html(nombre: str, exito: bool, duracion: int, fecha: str,
     <tr><td style="height:4px; background:{color_barra};"></td></tr>
 
     <!-- Encabezado -->
-    <tr>
+    <tr style="background:{color_encabezado}">
       <td style="padding:26px 28px 18px 28px;">
         <div style="font:700 18px/1.3 -apple-system,Segoe UI,Roboto,sans-serif;
                     color:#1e1e20; margin-bottom:10px;">{bot_nombre} &middot; Reporte de ejecución</div>
@@ -150,10 +175,10 @@ def render_html(nombre: str, exito: bool, duracion: int, fecha: str,
       <td style="padding:4px 28px 20px 28px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
           {fila("Bot", nombre)}
+          {fila("Equipo", equipo)}
           {fila("Duración", f"{duracion}s")}
           {fila("Fecha_Inicio", fecha_inicio)}
           {fila("Fecha_Fin", fecha)}
-          {fila("Equipo", equipo)}
         </table>
       </td>
     </tr>
