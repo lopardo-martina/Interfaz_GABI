@@ -46,10 +46,9 @@ GABI/
 │       └── main.py           # Bot de ejemplo para probar GABI
 |
 ├── config/
-│   ├── config_sistema.py     # Constantes de sistema (host/puerto SMTP, rutas)
+│   ├── config_sistema.py     # Constantes de sistema
 │   ├── almacenamiento.py     # Lectura/escritura del settings.json
-│   ├── settings.json         # Configuración real (NO se versiona)
-│   └── settings.example.json # Plantilla de configuración
+│   └── settings.json         # Configuración real (NO se versiona)
 |
 ├── core/                     # Núcleo del sistema
 │   ├── runner.py             # Ejecuta los bots y captura su salida
@@ -57,10 +56,12 @@ GABI/
 |
 ├── ui/                       # Interfaz
 │   ├── main_window.py        # Ventana raíz + navegación
+│   ├── components.py         
+│   ├── config_window.py      
 │   └── panels/
-│       ├── panel_main.py     # Ejecución y log
 │       ├── panel_bots.py     # Alta/baja/activación de bots
-│       └── panel_config.py   # Configuración editable
+│       ├── panel_config.py   # Configuración editable
+│       └── panel_main.py     # Ejecución y log
 |
 ├── Statics/                  # Recursos (logo, íconos)
 ├── main.py                   # Punto de entrada
