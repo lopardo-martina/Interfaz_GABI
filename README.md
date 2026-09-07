@@ -30,8 +30,11 @@ Sus funciones principales:
  
 **Configuración (global + variables por bot)**
  
-![Panel de configuración](docs/screenshots/configuracion.png)
+![Panel de configuración](docs/screenshots/config.png)
  
+**Configuración para las notificaciones**
+ 
+![Panel de configuración de notificaciones](docs/screenshots/config_notif.png)
 ---
  
 ## Estructura del proyecto
@@ -128,5 +131,5 @@ Este proyecto está bajo licencia MIT. Ver el archivo [LICENSE](LICENSE) para m�
  
 ---
  
-Desarrollado por **Martina Lopardo** — [github.com/lopardomartina](https://github.com/lopardomartina)
+Desarrollado por **Martina Lopardo** — [github.com/lopardo-martina](https://github.com/lopardo-martina)
  
